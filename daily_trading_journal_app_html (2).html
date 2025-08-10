@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daily Trading JournalbyKk</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#ffffff; --text:#111827; --muted:#6b7280; --border:#e5e7eb;
+      --primary:#2563eb; --danger:#dc2626; --ok:#16a34a; --ring:rgba(37,99,235,.15);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+    .container{max-width:1200px;margin:24px auto;padding:0 16px}
+    h1{font-size:1.35rem;margin:0}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .toolbar{display:flex;flex-wrap:wrap;gap:8px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+    .grid{display:grid;gap:16px}
+    .grid-2{grid-template-columns:1fr}
+    @media(min-width:1000px){.grid-2{grid-template-columns:1.2fr .8fr}}
+    .section{border:1px solid var(--border);border-radius:14px;background:var(--card);padding:14px}
+    .legend{display:flex;align-items:center;gap:8px;font-weight:700;margin-bottom:8px}
+    .legend small{color:var(--muted);font-weight:400}
+    .legend .spacer{flex:1}
+    .subgrid{display:grid;gap:12px}
+    .row{display:grid;gap:12px}
+    @media(min-width:820px){.row.cols-2{grid-template-columns:1fr 1fr}}
+    @media(min-width:1024px){.row.cols-3{grid-template-columns:repeat(3,1fr)}.row.cols-4{grid-template-columns:repeat(4,1fr)}}
+    label{font-size:.9rem;color:var(--muted)}
+    input,button,textarea,select{font:inherit}
+    input[type="date"],input[type="number"],input[type="text"],textarea,select{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;outline:none}
+    input:focus,textarea:focus,select:focus{box-shadow:0 0 0 4px var(--ring);border-color:#c7d2fe}
+    textarea{min-height:72px;resize:vertical}
+    input[type="number"]{text-align:right}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    button{cursor:pointer;border:1px solid transparent;border-radius:10px;padding:10px 14px;background:var(--primary);color:#fff}
+    button.secondary{background:#fff;color:#2b2b2b;border-color:var(--border)}
+    button.danger{background:var(--danger)}
+    button.ghost{background:transparent;color:#2b2b2b;border-color:var(--border)}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.85rem}
+    .pill.gain{background:#ecfdf5;color:#065f46}
+    .pill.loss{background:#fef2f2;color:#991b1b}
+    .muted{color:#6b7280}
+    .small{font-size:.85rem}
+    .nav{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 16px}
+    .nav a{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#fff;color:#111;text-decoration:none;font-size:.9rem}
+    .nav a:hover{border-color:#c7d2fe;box-shadow:0 0 0 3px var(--ring)}
+
+    .stats{display:grid;grid-template-columns:repeat(2,minmax(160px,1fr));gap:10px}
+    @media(min-width:640px){.stats{grid-template-columns:repeat(4,minmax(140px,1fr))}}
+    @media(min-width:1000px){.stats{grid-template-columns:repeat(6,minmax(140px,1fr))}}
+    .stat{background:#fff;border:1px solid var(--border);padding:10px 12px;border-radius:10px}
+    .stat .label{font-size:.8rem;color:var(--muted)}
+    .stat .value{font-weight:700}
+
+    .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:12px}
+    table{width:100%;border-collapse:collapse;min-width:960px}
+    th,td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+    th{background:#fafafa;text-align:left;color:#374151;font-weight:600;position:sticky;top:0}
+    td.num{text-align:right}
+
+    .chart-card{padding:12px}
+    #equityChart{display:block;width:100%}
+
+    .mood{display:flex;align-items:center;gap:10px}
+    .mood output{min-width:24px;text-align:center;color:#111}
+
+    details>summary{cursor:pointer;list-style:none}
+    details>summary::-webkit-details-marker{display:none}
+    details.section{padding:0}
+    details .section-body{padding:14px}
+    details summary{padding:14px;border-radius:14px}
+    details[open] summary{border-bottom:1px solid var(--border);border-bottom-left-radius:0;border-bottom-right-radius:0}
+
+    #testPanel{display:none;white-space:pre-wrap}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Daily Trading JournalbyKk</h1>
+      <div class="toolbar">
+        <button id="exportCsvBtn" class="secondary" title="ดาวน์โหลด CSV">Export CSV</button>
+        <label for="importCsv" class="ghost" style="display:inline-flex;align-items:center;gap:8px">
+          Import CSV <input id="importCsv" type="file" accept=".csv" style="display:none" />
+        </label>
+        <button id="savePngBtn" class="secondary" title="บันทึกรูปกราฟ PNG">Save Chart PNG</button>
+        <button id="sampleBtn" class="secondary">เติมตัวอย่าง</button>
+        <button id="runTestsBtn" class="secondary" title="รันชุดทดสอบ">Run Tests</button>
+        <button id="clearBtn" class="danger">ล้างข้อมูลทั้งหมด</button>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="#overview">สรุป</a>
+      <a href="#entry">บันทึกตัวเงิน</a>
+      <a href="#context">รายละเอียด/บริบท</a>
+      <a href="#emotions">อารมณ์</a>
+      <a href="#review">รีวิว</a>
+      <a href="#log">บันทึกประจำวัน</a>
+    </nav>
+
+    <!-- Overview: stats + chart -->
+    <section id="overview" class="grid grid-2">
+      <div class="card">
+        <div class="legend">📊 สรุปภาพรวม <small>(อัปเดตอัตโนมัติ)</small></div>
+        <div class="stats" id="stats"></div>
+      </div>
+      <div class="card chart-card">
+        <div class="legend">📈 Equity Curve <span class="spacer"></span>
+        <label for="chartSize" class="small">ขนาด</label>
+        <select id="chartSize" title="ขนาดกราฟ">
+          <option value="compact">S</option>
+          <option value="comfortable" selected>M</option>
+          <option value="large">L</option>
+          <option value="xlarge">XL</option>
+        </select>
+      </div>
+        <canvas id="equityChart" aria-label="Equity Curve" role="img"></canvas>
+      </div>
+    </section>
+
+    <!-- Entry & categories -->
+    <details id="entry" class="section" open>
+      <summary class="legend">✍️ บันทึกตัวเงิน <small>(วันที่, P/L, เงินตั้งต้น, โหมด %)</small></summary>
+      <div class="section-body subgrid">
+        <div class="row cols-4">
+          <div>
+            <label for="date">วันที่</label>
+            <input type="date" id="date" required />
+          </div>
+          <div>
+            <label for="pl">กำไร/ขาดทุน (ต่อวัน)</label>
+            <input type="number" id="pl" step="0.01" placeholder="เช่น 125.50 หรือ -40" />
+          </div>
+          <div>
+            <label for="startingBalance">เงินตั้งต้น (ทางเลือก)</label>
+            <input type="number" id="startingBalance" step="0.01" placeholder="เริ่มต้นที่ 0" />
+          </div>
+          <div>
+            <label for="pctMode">โหมดคำนวณ % รายวัน</label>
+            <select id="pctMode">
+              <option value="start">เทียบเงินตั้งต้น</option>
+              <option value="prev">เทียบยอดวันก่อนหน้า</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions" style="margin-top:8px">
+          <button id="saveBtn">บันทึก/อัปเดต</button>
+          <button id="resetFormBtn" class="secondary">ล้างฟอร์ม</button>
+        </div>
+        <p class="small muted">* 1 วันเก็บ 1 แถว — กรอกวันที่เดิม = อัปเดตค่า</p>
+      </div>
+    </details>
+
+    <details id="context" class="section" open>
+      <summary class="legend">🧭 รายละเอียด / บริบท</summary>
+      <div class="section-body">
+        <label for="note">ระบุข่าว เหตุการณ์ ช่วงเวลา ตลาด ฯลฯ</label>
+        <textarea id="note" placeholder="ตัวอย่าง: เทรดช่วง NY open, ข่าว CPI ทำให้ผันผวนสูง"></textarea>
+      </div>
+    </details>
+
+    <details id="emotions" class="section">
+      <summary class="legend">🧠 อารมณ์</summary>
+      <div class="section-body row cols-3">
+        <div>
+          <label>ก่อนเทรด</label>
+          <div class="mood">
+            <input type="range" id="moodPre" min="1" max="10" value="5" />
+            <output id="moodPreOut">5</output>/10
+          </div>
+        </div>
+        <div>
+          <label>ระหว่างเทรด</label>
+          <div class="mood">
+            <input type="range" id="moodDuring" min="1" max="10" value="5" />
+            <output id="moodDuringOut">5</output>/10
+          </div>
+        </div>
+        <div>
+          <label>หลังเทรด</label>
+          <div class="mood">
+            <input type="range" id="moodPost" min="1" max="10" value="5" />
+            <output id="moodPostOut">5</output>/10
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details id="review" class="section">
+      <summary class="legend">🔎 รีวิว (ทำได้ดี / ต้องปรับปรุง)</summary>
+      <div class="section-body row cols-2">
+        <div>
+          <label for="didWell">ทำได้ดี</label>
+          <textarea id="didWell" placeholder="ตัวอย่าง: รอแท่งคอนเฟิร์ม, ไม่ไล่ราคา"></textarea>
+        </div>
+        <div>
+          <label for="didPoor">ทำได้ไม่ดี / ต้องปรับปรุง</label>
+          <textarea id="didPoor" placeholder="ตัวอย่าง: ปล่อยขาดทุนยาว, เข้าช้า"></textarea>
+        </div>
+      </div>
+      <div id="testPanel" class="card small" style="margin-top:12px"></div>
+    </details>
+
+    <section id="log" class="section" style="margin-top:16px">
+      <div class="legend">📚 บันทึกประจำวัน</div>
+      <div class="table-wrap">
+        <table id="table">
+          <thead>
+            <tr>
+              <th style="width:120px">วันที่</th>
+              <th style="width:120px">ผลลัพธ์</th>
+              <th style="width:120px">Daily %</th>
+              <th style="width:140px">กำไร/ขาดทุน</th>
+              <th style="width:160px">สะสม (Cumulative)</th>
+              <th>รายละเอียด / อารมณ์ / ทำได้ดี-ไม่ดี</th>
+              <th style="width:160px">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // ====== Utilities & State ======
+    const STORAGE_KEY = 'dailyJournal:v3';
+    const START_KEY = 'dailyJournal:startBalance';
+    const PCTMODE_KEY = 'dailyJournal:pctMode';
+
+    const $ = (s)=>document.querySelector(s);
+    const tableBody = $('#table tbody');
+
+    const dateEl = $('#date');
+    const plEl = $('#pl');
+    const startEl = $('#startingBalance');
+    const modeEl = $('#pctMode');
+    const noteEl = $('#note');
+    const moodPreEl = $('#moodPre');
+    const moodDuringEl = $('#moodDuring');
+    const moodPostEl = $('#moodPost');
+    const moodPreOut = $('#moodPreOut');
+    const moodDuringOut = $('#moodDuringOut');
+    const moodPostOut = $('#moodPostOut');
+    const didWellEl = $('#didWell');
+    const didPoorEl = $('#didPoor');
+
+    function todayISO(){ const d = new Date(); d.setHours(0,0,0,0); return d.toISOString().slice(0,10); }
+    function formatMoney(n){ return Number(n||0).toLocaleString('th-TH',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+    function formatPct(n){ return (Number(n)||0).toLocaleString('th-TH',{minimumFractionDigits:2, maximumFractionDigits:2}) + '%'; }
+    function formatDateThai(iso){ const d = new Date(iso+'T00:00:00'); return d.toLocaleDateString('th-TH',{year:'numeric', month:'short', day:'2-digit'}); }
+
+    function loadStart(){ const v = parseFloat(localStorage.getItem(START_KEY)); return isFinite(v)? v: 0; }
+    function saveStart(v){ localStorage.setItem(START_KEY, String(v ?? 0)); }
+    function loadMode(){ const v = localStorage.getItem(PCTMODE_KEY); return (v==='prev'||v==='start')? v : 'start'; }
+    function saveMode(v){ localStorage.setItem(PCTMODE_KEY, v); }
+
+    function migrateV1(){
+      try{
+        const oldKeys = ['dailyJournal:v1','dailyJournal:v2'];
+        const rawV3 = localStorage.getItem(STORAGE_KEY);
+        if(!rawV3){
+          for(const k of oldKeys){
+            const raw = localStorage.getItem(k);
+            if(raw){
+              const arr = JSON.parse(raw)||[];
+              const mapped = arr.map(x=>({date:String(x.date).slice(0,10), pl:Number(x.pl)||0, note:x.note||'', moodPre: x.moodPre ?? null, moodDuring: x.moodDuring ?? null, moodPost: x.moodPost ?? null, didWell:x.didWell||'', didPoor:x.didPoor||''}));
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
+              break;
+            }
+          }
+        }
+      }catch{}
+    }
+
+    function loadData(){
+      migrateV1();
+      try{ const raw = localStorage.getItem(STORAGE_KEY); const arr = raw? JSON.parse(raw): [];
+        return arr.map(x=>({
+          date:String(x.date).slice(0,10), pl:Number(x.pl)||0, note:x.note||'',
+          moodPre: x.moodPre ?? null, moodDuring: x.moodDuring ?? null, moodPost: x.moodPost ?? null,
+          didWell: x.didWell || '', didPoor: x.didPoor || ''
+        })).sort((a,b)=> a.date.localeCompare(b.date));
+      }catch{ return []; }
+    }
+    function saveData(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+    function upsertEntry(date, pl, extra){
+      if(!date) return;
+      const data = loadData();
+      const i = data.findIndex(x=>x.date===date);
+      const payload = {date, pl, note: extra?.note||'', moodPre: extra?.moodPre ?? null, moodDuring: extra?.moodDuring ?? null, moodPost: extra?.moodPost ?? null, didWell: extra?.didWell||'', didPoor: extra?.didPoor||''};
+      if(i>=0){ data[i] = {...data[i], ...payload}; }
+      else { data.push(payload); }
+      saveData(data); render();
+    }
+    function deleteEntry(date){ saveData(loadData().filter(x=>x.date!==date)); render(); }
+
+    function computeCumulative(rows, startBal, mode){
+      let cum = startBal||0; let prevBase = startBal||0;
+      return rows.map((r)=>{
+        cum += r.pl;
+        const base = (mode==='prev') ? prevBase : startBal; // prev = yesterday equity, start = starting balance
+        const dailyPct = base>0 ? (r.pl/base*100) : 0;
+        const cumPct = startBal>0 ? ((cum-startBal)/startBal*100) : 0;
+        prevBase = cum; // next day baseline for 'prev'
+        const result = r.pl>0? 'ชนะ': (r.pl<0? 'แพ้':'เสมอ');
+        return {...r, cum, dailyPct, cumPct, result};
+      });
+    }
+
+    function calcStats(rows, startBal){
+      if(!rows.length) return {total:0,cumPct:0,best:0,bestDate:null,worst:0,worstDate:null,days:0,winRate:0,daysWon:0,daysLost:0,avgDailyPct:0,avgWin:0,avgLoss:0,maxDD:0};
+      const total = rows.at(-1).cum - (startBal||0); const cumPct = startBal>0? (total/startBal*100): 0;
+      let best=-Infinity,worst=Infinity,bD=null,wD=null, wins=[],losses=[]; let peak=-Infinity,maxDD=0; let pctSum=0;
+      rows.forEach(r=>{
+        if(r.pl>0) wins.push(r.pl); if(r.pl<0) losses.push(r.pl);
+        if(r.pl>best){best=r.pl;bD=r.date} if(r.pl<worst){worst=r.pl;wD=r.date}
+        if(r.cum>peak) peak=r.cum; const dd=peak-r.cum; if(dd>maxDD) maxDD=dd;
+        pctSum += r.dailyPct || 0;
+      });
+      const days = rows.length; const daysWon = rows.filter(r=>r.pl>0).length; const daysLost = rows.filter(r=>r.pl<0).length; const winRate = days? (daysWon/days)*100:0; const avgDailyPct = days? pctSum/days:0;
+      const avgWin = wins.length? wins.reduce((a,b)=>a+b,0)/wins.length: 0; const avgLoss = losses.length? losses.reduce((a,b)=>a+b,0)/losses.length: 0;
+      return {total,cumPct,best,bestDate:bD,worst,worstDate:wD,days,winRate,daysWon,daysLost,avgDailyPct,avgWin,avgLoss,maxDD};
+    }
+
+    function renderTable(rows){
+      tableBody.innerHTML = '';
+      rows.forEach(r=>{
+        const tr = document.createElement('tr');
+        const noteParts = [];
+        if(r.note) noteParts.push(`<b>รายละเอียด:</b> ${escapeHtml(r.note)}`);
+        if(r.moodPre!=null || r.moodDuring!=null || r.moodPost!=null) noteParts.push(`<b>อารมณ์</b> ก่อน ${r.moodPre??'-'}/10 · ระหว่าง ${r.moodDuring??'-'}/10 · หลัง ${r.moodPost??'-'}/10`);
+        if(r.didWell) noteParts.push(`<b>ทำได้ดี:</b> ${escapeHtml(r.didWell)}`);
+        if(r.didPoor) noteParts.push(`<b>ทำได้ไม่ดี:</b> ${escapeHtml(r.didPoor)}`);
+        const detailsHtml = noteParts.join('<br/>');
+        tr.innerHTML = `
+          <td>${formatDateThai(r.date)}</td>
+          <td>${r.result==='ชนะ'?'<span class="pill gain">ชนะ</span>': (r.result==='แพ้'?'<span class="pill loss">แพ้</span>':'เสมอ')}</td>
+          <td class="num">${formatPct(r.dailyPct)}</td>
+          <td class="num">${r.pl>=0?'<span class="pill gain">+':''}${formatMoney(r.pl)}${r.pl>=0?'</span>':''}</td>
+          <td class="num"><b>${formatMoney(r.cum)}</b> <span class="muted small">(${formatPct(r.cumPct)})</span></td>
+          <td class="small">${detailsHtml||'<span class="muted">—</span>'}</td>
+          <td>
+            <div class="actions">
+              <button class="secondary" data-edit="${r.date}">แก้ไข</button>
+              <button class="danger" data-del="${r.date}">ลบ</button>
+            </div>
+          </td>`;
+        tableBody.appendChild(tr);
+      });
+      tableBody.querySelectorAll('button[data-edit]').forEach(btn=>btn.addEventListener('click',e=>{
+        const dt = e.currentTarget.getAttribute('data-edit');
+        const row = loadData().find(x=>x.date===dt); if(row){
+          dateEl.value=row.date; plEl.value=row.pl; noteEl.value=row.note||'';
+          moodPreEl.value=row.moodPre??5; moodDuringEl.value=row.moodDuring??5; moodPostEl.value=row.moodPost??5;
+          moodPreOut.textContent=moodPreEl.value; moodDuringOut.textContent=moodDuringEl.value; moodPostOut.textContent=moodPostEl.value;
+          didWellEl.value=row.didWell||''; didPoorEl.value=row.didPoor||'';
+          window.scrollTo({top:0,behavior:'smooth'});
+        }
+      }));
+      tableBody.querySelectorAll('button[data-del]').forEach(btn=>btn.addEventListener('click',e=>{
+        const dt = e.currentTarget.getAttribute('data-del');
+        if(confirm(`ลบข้อมูลวันที่ ${formatDateThai(dt)} ?`)) deleteEntry(dt);
+      }));
+    }
+
+    function renderStats(s){
+      const wrap = document.getElementById('stats');
+      wrap.innerHTML = `
+        <div class="stat"><div class="label">ผลรวม (จากเงินตั้งต้น)</div><div class="value">${formatMoney(s.total)}</div></div>
+        <div class="stat"><div class="label">Cumulative %</div><div class="value">${formatPct(s.cumPct)}</div></div>
+        <div class="stat"><div class="label">Best Day</div><div class="value">${formatMoney(s.best)} ${s.bestDate?'<span class="muted small">('+formatDateThai(s.bestDate)+')</span>':''}</div></div>
+        <div class="stat"><div class="label">Worst Day</div><div class="value">${formatMoney(s.worst)} ${s.worstDate?'<span class="muted small">('+formatDateThai(s.worstDate)+')</span>':''}</div></div>
+        <div class="stat"><div class="label">Days Won / Lost</div><div class="value">${s.daysWon} / ${s.daysLost}</div></div>
+        <div class="stat"><div class="label">Win Rate</div><div class="value">${s.winRate.toFixed(1)}%</div></div>
+        <div class="stat"><div class="label">Avg Daily %</div><div class="value">${formatPct(s.avgDailyPct)}</div></div>
+        <div class="stat"><div class="label">Max Drawdown</div><div class="value">${formatMoney(s.maxDD)}</div></div>`;
+    }
+
+    let chart;
+    const CHARTSIZE_KEY = 'dailyJournal:chartSize';
+    function getChartSize(){ const v = localStorage.getItem(CHARTSIZE_KEY); return (v==='compact'||v==='comfortable'||v==='large'||v==='xlarge')? v : 'comfortable'; }
+    function setChartSize(v){ localStorage.setItem(CHARTSIZE_KEY, v); }
+    function sizeToHeight(size){ return size==='compact'? 300 : size==='comfortable'? 420 : size==='large'? 560 : 720; }
+    function sizeToStyle(size){
+      if(size==='compact') return {borderWidth:2, pointRadius:2, tension:.25};
+      if(size==='large') return {borderWidth:3.5, pointRadius:3.5, tension:.22};
+      if(size==='xlarge') return {borderWidth:4, pointRadius:4, tension:.2};
+      return {borderWidth:3, pointRadius:3, tension:.25}; // comfortable
+    }
+    function renderChart(rows){
+      const card = document.querySelector('.chart-card');
+      const size = getChartSize();
+      const H = sizeToHeight(size);
+      card.style.height = H + 'px';
+      const style = sizeToStyle(size);
+      const ctx = document.getElementById('equityChart').getContext('2d');
+      const labels = rows.map(r=>r.date);
+      const data = rows.map(r=>r.cum);
+      if(chart) chart.destroy();
+      chart = new Chart(ctx,{
+        type:'line',
+        data:{ labels, datasets:[{ label:'Cumulative P&L', data, borderWidth:style.borderWidth, pointRadius:style.pointRadius, tension:style.tension }] },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          scales:{
+            x:{ ticks:{ callback:(v,i)=> formatDateThai(labels[i]) } },
+            y:{ ticks:{ callback:(val)=> Number(val).toLocaleString('th-TH',{maximumFractionDigits:2}) } }
+          },
+          plugins:{ legend:{display:false}, tooltip:{ callbacks:{ title:(items)=> items[0]? formatDateThai(items[0].label): '', label:(it)=> ' สะสม: '+formatMoney(it.parsed.y) } } }
+        }
+      });
+    }
+
+    function render(){
+      const startBal = parseFloat(startEl.value||'0')||0; saveStart(startBal);
+      const mode = modeEl.value; saveMode(mode);
+      const data = loadData(); const rows = computeCumulative(data, startBal, mode);
+      renderTable(rows); renderChart(rows); renderStats(calcStats(rows, startBal));
+    }
+
+    // ====== CSV & Chart Export ======
+    function exportCSV(){
+      const startBal = parseFloat(startEl.value||'0')||0; const mode = modeEl.value; const rows = computeCumulative(loadData(), startBal, mode);
+      const header = ['Date','Daily P/L','Daily %','Cumulative P&L','Cumulative %','Result','PreMood','DuringMood','PostMood','DidWell','DidPoor','Note','PctMode'];
+      const lines = [header.join(',')];
+      rows.forEach(r=> lines.push([r.date, r.pl.toFixed(2), r.dailyPct.toFixed(2), r.cum.toFixed(2), r.cumPct.toFixed(2), r.result, r.moodPre??'', r.moodDuring??'', r.moodPost??'', quoteCsv(r.didWell||''), quoteCsv(r.didPoor||''), quoteCsv(r.note||''), mode].join(',')) );
+      const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='daily_pnl.csv'; a.click(); URL.revokeObjectURL(url);
+    }
+    async function importCSV(file){
+      const text = await file.text();
+      const rows = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean); if(!rows.length) return;
+      const data = loadData(); const push=(d,pl)=>{const i=data.findIndex(x=>x.date===d); if(i>=0) data[i].pl=pl; else data.push({date:d,pl,note:'',moodPre:null,moodDuring:null,moodPost:null,didWell:'',didPoor:''});};
+      let start = 0; if(rows[0].toLowerCase().includes('date')) start = 1;
+      for(let i=start;i<rows.length;i++){
+        const parts = parseCsvLine(rows[i]); if(!parts.length) continue; const d = parts[0]?.slice(0,10); const v = parseFloat(parts[1]); if(d && isFinite(v)) push(d,v);
+      }
+      saveData(data); render();
+    }
+    function saveChartPNG(){ if(!chart) return; const a=document.createElement('a'); a.href=chart.toBase64Image('image/png',1); a.download='equity_curve.png'; a.click(); }
+
+    // ====== Helpers ======
+    function escapeHtml(s){ return String(s||'').replace(/[&<>\"]/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[m])); }
+    function quoteCsv(s=""){ const needsQuote = /[",\n]/.test(s); const esc = String(s).replace(/"/g,'""'); return needsQuote? `"${esc}"` : esc; }
+    function parseCsvLine(line){
+      const out=[]; let cur=''; let inQ=false; for(let i=0;i<line.length;i++){ const ch=line[i]; if(inQ){ if(ch==='"' && line[i+1]==='"'){ cur+='"'; i++; } else if(ch==='"'){ inQ=false; } else { cur+=ch; } } else { if(ch==='"'){ inQ=true; } else if(ch===','){ out.push(cur); cur=''; } else { cur+=ch; } } } out.push(cur); return out; }
+
+    // ====== Minimal Test Harness ======
+    function runTests(){
+      const out=[]; const pass=(name)=>out.push(`✅ ${name}`); const fail=(name,exp,got)=>out.push(`❌ ${name}\n   expected: ${exp}\n   got     : ${got}`);
+      const approx=(a,b,eps=1e-6)=>Math.abs(a-b)<=eps;
+
+      // Test 1: parseCsvLine
+      const line='2025-08-08,"hello, world",42,"He said ""go"""';
+      const arr=parseCsvLine(line);
+      const ok1 = arr.length===4 && arr[0]==='2025-08-08' && arr[1]==='hello, world' && arr[2]==='42' && arr[3]==='He said "go"';
+      ok1? pass('parseCsvLine handles quotes/commas') : fail('parseCsvLine handles quotes/commas','[2025-08-08, hello, world, 42, He said "go"]', JSON.stringify(arr));
+
+      // Test 2: quoteCsv
+      const q1 = quoteCsv('hello');
+      const q2 = quoteCsv('he,llo');
+      const q3 = quoteCsv('he"llo');
+      const ok2 = (q1==='hello') && (q2==='"he,llo"') && (q3==='"he""llo"');
+      ok2? pass('quoteCsv quotes and escapes correctly') : fail('quoteCsv', 'hello | "he,llo" | "he""llo"', `${q1} | ${q2} | ${q3}`);
+
+      // Test 3: computeCumulative (start mode)
+      const rows=[{date:'2025-01-01',pl:100},{date:'2025-01-02',pl:-50}];
+      const startRows=computeCumulative(rows,1000,'start');
+      const ok3 = startRows[0].cum===1100 && startRows[1].cum===1050 && approx(startRows[0].dailyPct,10) && approx(startRows[1].dailyPct,-5) && approx(startRows[1].cumPct,5);
+      ok3? pass('computeCumulative start-mode math') : fail('computeCumulative start-mode math','cum 1100,1050; daily 10%,-5%; cum% 5%',''+JSON.stringify(startRows));
+
+      // Test 4: computeCumulative (prev mode)
+      const prevRows=computeCumulative(rows,1000,'prev');
+      const ok4 = prevRows[0].cum===1100 && prevRows[1].cum===1050 && approx(prevRows[0].dailyPct,10) && approx(prevRows[1].dailyPct,(-50/1100*100));
+      ok4? pass('computeCumulative prev-mode math') : fail('computeCumulative prev-mode math','daily% -4.545..',''+JSON.stringify(prevRows));
+
+      // Test 5: quoteCsv should quote strings with newlines
+      const q4 = quoteCsv('line1\nline2');
+      const ok5 = q4 === '"line1\nline2"';
+      ok5? pass('quoteCsv handles newlines') : fail('quoteCsv handles newlines','"line1\\nline2"', q4);
+
+      // Test 6: import split with \n and \r\n
+      const s1 = 'a\nb'; const s2 = 'a\r\nb';
+      const ok6 = s1.split(/\r?\n/).length===2 && s2.split(/\r?\n/).length===2;
+      ok6? pass('split handles LF and CRLF') : fail('split handles LF and CRLF','2 and 2', `${s1.split(/\r?\n/).length} and ${s2.split(/\r?\n/).length}`);
+
+      // Test 7: escapeHtml
+      const e1 = escapeHtml('<b>&"');
+      const ok7 = e1==='&lt;b&gt;&amp;&quot;';
+      ok7? pass('escapeHtml escapes <,>,&,"') : fail('escapeHtml','&lt;b&gt;&amp;&quot;', e1);
+
+      // Test 8: prev mode with zero start balance (dailyPct should be 0 to avoid div-by-zero)
+      const zRows = computeCumulative([{date:'2025-01-01',pl:100}],0,'prev');
+      const ok8 = zRows[0].dailyPct===0;
+      ok8? pass('prev mode base 0 => dailyPct 0') : fail('prev mode base 0 => dailyPct 0','0', String(zRows[0].dailyPct));
+
+      const panel=document.getElementById('testPanel');
+      if(panel){ panel.style.display='block'; panel.textContent = out.join('\n'); }
+      console.log(out.join('\n'));
+    }
+
+    // ====== Init & Events ======
+    (function init(){
+      dateEl.value = todayISO(); startEl.value = loadStart(); modeEl.value = loadMode();
+      const syncMood = ()=>{ moodPreOut.textContent=moodPreEl.value; moodDuringOut.textContent=moodDuringEl.value; moodPostOut.textContent=moodPostEl.value; };
+      moodPreEl.addEventListener('input', syncMood); moodDuringEl.addEventListener('input', syncMood); moodPostEl.addEventListener('input', syncMood); syncMood();
+
+      render();
+      document.getElementById('saveBtn').addEventListener('click', ()=>{
+        const date = dateEl.value; const pl = parseFloat(plEl.value);
+        if(!date || !isFinite(pl)){ alert('กรุณากรอกวันที่และกำไร/ขาดทุนให้ถูกต้อง'); return; }
+        upsertEntry(date, pl, { note: noteEl.value, moodPre: Number(moodPreEl.value), moodDuring: Number(moodDuringEl.value), moodPost: Number(moodPostEl.value), didWell: didWellEl.value, didPoor: didPoorEl.value });
+        plEl.value='';
+      });
+      document.getElementById('resetFormBtn').addEventListener('click', ()=>{ plEl.value=''; noteEl.value=''; didWellEl.value=''; didPoorEl.value=''; moodPreEl.value=5; moodDuringEl.value=5; moodPostEl.value=5; dateEl.value=todayISO(); modeEl.value=loadMode(); moodPreOut.textContent='5'; moodDuringOut.textContent='5'; moodPostOut.textContent='5'; });
+      startEl.addEventListener('change', render);
+      modeEl.addEventListener('change', ()=>{ saveMode(modeEl.value); render(); });
+      document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
+      document.getElementById('importCsv').addEventListener('change', e=>{ if(e.target.files?.[0]) importCSV(e.target.files[0]); e.target.value=''; });
+      document.getElementById('clearBtn').addEventListener('click', ()=>{ if(confirm('ล้างข้อมูลทั้งหมดในสมุดบันทึก?')){ localStorage.removeItem(STORAGE_KEY); render(); } });
+      document.getElementById('sampleBtn').addEventListener('click', ()=>{ const base=loadData(); const demo=[{date:'2025-08-06',pl:618.39,note:'NY open',moodPre:6,moodDuring:7,moodPost:8,didWell:'รอแท่งคอนเฟิร์ม',didPoor:'ปิดกำไรเร็ว'},{date:'2025-08-07',pl:408.46,note:'ตามเทรนด์',moodPre:7,moodDuring:7,moodPost:7,didWell:'ปล่อยวิ่ง',didPoor:'เข้าไม้ช้า'},{date:'2025-08-08',pl:188.91,note:'ผันผวนต่ำ',moodPre:5,moodDuring:5,moodPost:6,didWell:'คุมความเสี่ยง',didPoor:'ไม่กล้าถัวกำไร'}]; const merged=[...base]; demo.forEach(s=>{const i=merged.findIndex(x=>x.date===s.date); if(i>=0) merged[i]={...merged[i],...s}; else merged.push(s);}); saveData(merged); render(); });
+      document.getElementById('savePngBtn').addEventListener('click', saveChartPNG);
+      document.getElementById('runTestsBtn').addEventListener('click', runTests);
+
+      // Chart size control
+      const chartSizeEl = document.getElementById('chartSize');
+      if(chartSizeEl){ chartSizeEl.value = getChartSize(); chartSizeEl.addEventListener('change', ()=>{ setChartSize(chartSizeEl.value); const startBal = parseFloat(startEl.value||'0')||0; const mode = modeEl.value; const rows = computeCumulative(loadData(), startBal, mode); renderChart(rows); }); }
+
+      // Smooth scroll for nav
+      document.querySelectorAll('.nav a').forEach(a=>{
+        a.addEventListener('click', (e)=>{
+          const href=a.getAttribute('href'); if(href && href.startsWith('#')){ e.preventDefault(); document.querySelector(href)?.scrollIntoView({behavior:'smooth', block:'start'}); }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
